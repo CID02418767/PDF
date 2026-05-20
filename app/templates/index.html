@@ -31,7 +31,7 @@
         <form class="tool-card" data-download-form action="/split" method="post" enctype="multipart/form-data">
           <div>
             <h2>Split PDF</h2>
-            <p>Choose a page range and how many PDF parts to create. The output is a ZIP.</p>
+            <p>Choose how many files to create, then set the page range for each output file.</p>
           </div>
           <label class="drop-zone">
             <span>Choose one PDF</span>
@@ -39,18 +39,12 @@
           </label>
           <div class="split-controls" aria-label="Split options">
             <label>
-              Start page
-              <input name="start_page" type="number" min="1" step="1" value="1" required />
-            </label>
-            <label>
-              End page
-              <input name="end_page" type="number" min="1" step="1" placeholder="Last page" />
-            </label>
-            <label>
               Parts
-              <input name="parts" type="number" min="1" step="1" value="1" required />
+              <input name="parts" type="number" min="1" step="1" value="2" required data-parts-input />
             </label>
           </div>
+          <input name="ranges" type="hidden" data-ranges-input />
+          <div class="range-list" data-range-list aria-label="Output file page ranges"></div>
           <button type="submit">Split and download</button>
           <p class="status" role="status" aria-live="polite"></p>
         </form>
