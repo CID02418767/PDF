@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PDF Editor</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">FastAPI PDF tools</p>
+        <h1 id="page-title">PDF Editor</h1>
+        <p class="summary">Merge multiple PDF files or split a selected page range into several PDF parts.</p>
+      </section>
+
+      <section class="tool-grid" aria-label="PDF tools">
+        <form class="tool-card" data-download-form action="/merge" method="post" enctype="multipart/form-data">
+          <div>
+            <h2>Merge PDFs</h2>
+            <p>Select two or more PDF files. The output keeps the upload order.</p>
+          </div>
+          <label class="drop-zone">
+            <span>Choose PDF files</span>
+            <input name="files" type="file" accept="application/pdf,.pdf" multiple required />
+          </label>
+          <button type="submit">Merge and download</button>
+          <p class="status" role="status" aria-live="polite"></p>
+        </form>
+
+        <form class="tool-card" data-download-form action="/split" method="post" enctype="multipart/form-data">
+          <div>
+            <h2>Split PDF</h2>
+            <p>Choose a page range and how many PDF parts to create. The output is a ZIP.</p>
+          </div>
+          <label class="drop-zone">
+            <span>Choose one PDF</span>
+            <input name="file" type="file" accept="application/pdf,.pdf" required />
+          </label>
+          <div class="split-controls" aria-label="Split options">
+            <label>
+              Start page
+              <input name="start_page" type="number" min="1" step="1" value="1" required />
+            </label>
+            <label>
+              End page
+              <input name="end_page" type="number" min="1" step="1" placeholder="Last page" />
+            </label>
+            <label>
+              Parts
+              <input name="parts" type="number" min="1" step="1" value="1" required />
+            </label>
+          </div>
+          <button type="submit">Split and download</button>
+          <p class="status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', path='/app.js') }}"></script>
+  </body>
+</html>
