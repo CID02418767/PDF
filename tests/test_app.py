@@ -1,3 +1,4 @@
+import json
 from io import BytesIO
 from zipfile import ZipFile
 
@@ -35,10 +36,19 @@ def test_merge_endpoint_combines_uploaded_pdfs():
     assert len(PdfReader(BytesIO(response.content)).pages) == 3
 
 
-def test_split_endpoint_returns_selected_range_as_requested_parts():
+def test_split_endpoint_returns_explicit_ranges_as_requested_parts():
     response = client.post(
         "/split",
-        data={"start_page": "1", "end_page": "5", "parts": "2"},
+        data={
+            "parts": "3",
+            "ranges": json.dumps(
+                [
+                    {"start": 1, "end": 2},
+                    {"start": 3, "end": 4},
+                    {"start": 5, "end": 5},
+                ]
+            ),
+        },
         files={"file": ("five.pdf", make_pdf(5), "application/pdf")},
     )
 
@@ -49,21 +59,46 @@ def test_split_endpoint_returns_selected_range_as_requested_parts():
         names = archive.namelist()
         first_part = archive.read(names[0])
         second_part = archive.read(names[1])
+        third_part = archive.read(names[2])
 
-    assert names == ["part_001_pages_001-003.pdf", "part_002_pages_004-005.pdf"]
-    assert len(PdfReader(BytesIO(first_part)).pages) == 3
+    assert names == [
+        "part_001_pages_001-002.pdf",
+        "part_002_pages_003-004.pdf",
+        "part_003_pages_005-005.pdf",
+    ]
+    assert len(PdfReader(BytesIO(first_part)).pages) == 2
     assert len(PdfReader(BytesIO(second_part)).pages) == 2
+    assert len(PdfReader(BytesIO(third_part)).pages) == 1
 
 
-def test_split_endpoint_rejects_too_many_parts():
+def test_split_endpoint_fallback_creates_selected_range_and_remaining_pages():
     response = client.post(
         "/split",
-        data={"start_page": "2", "end_page": "3", "parts": "3"},
+        data={"start_page": "2", "end_page": "3", "parts": "2"},
+        files={"file": ("five.pdf", make_pdf(5), "application/pdf")},
+    )
+
+    assert response.status_code == 200
+
+    with ZipFile(BytesIO(response.content)) as archive:
+        names = archive.namelist()
+        selected = archive.read(names[0])
+        remaining = archive.read(names[1])
+
+    assert names == ["part_001_pages_002-003.pdf", "part_002_pages_001-005.pdf"]
+    assert len(PdfReader(BytesIO(selected)).pages) == 2
+    assert len(PdfReader(BytesIO(remaining)).pages) == 3
+
+
+def test_split_endpoint_requires_matching_range_count():
+    response = client.post(
+        "/split",
+        data={"parts": "3", "ranges": json.dumps([{"start": 1, "end": 2}])},
         files={"file": ("three.pdf", make_pdf(3), "application/pdf")},
     )
 
     assert response.status_code == 400
-    assert response.json()["detail"] == "Number of parts cannot be greater than the selected page count."
+    assert response.json()["detail"] == "Number of page ranges must match the number of parts."
 
 
 def test_non_pdf_upload_is_rejected():
