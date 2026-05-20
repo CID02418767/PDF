@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import NamedTuple
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from pypdf import PdfReader, PdfWriter
@@ -9,6 +10,11 @@ from pypdf.errors import PdfReadError
 
 class PdfProcessingError(ValueError):
     """Raised when an uploaded PDF cannot be processed safely."""
+
+
+class PageRange(NamedTuple):
+    start: int
+    end: int
 
 
 def merge_pdf_files(input_paths: list[Path], output_path: Path) -> int:
@@ -64,9 +70,41 @@ def split_pdf_by_range(input_path: Path, output_dir: Path, start_page: int, end_
     final_page = page_count if end_page is None else end_page
     _validate_split_request(start_page, final_page, parts, page_count)
 
-    selected_pages = list(range(start_page, final_page + 1))
-    chunks = _split_into_balanced_chunks(selected_pages, parts)
+    if parts == 1:
+        chunks = [list(range(start_page, final_page + 1))]
+    elif parts == 2:
+        selected_pages = set(range(start_page, final_page + 1))
+        remaining_pages = [page for page in range(1, page_count + 1) if page not in selected_pages]
+        if not remaining_pages:
+            raise PdfProcessingError("There are no remaining pages to create the second part.")
+        chunks = [list(range(start_page, final_page + 1)), remaining_pages]
+    else:
+        raise PdfProcessingError("For 3 or more parts, provide one page range for each part.")
+
+    return _write_page_chunks(reader, chunks, output_dir)
+
+
+def split_pdf_by_ranges(input_path: Path, output_dir: Path, ranges: list[PageRange]) -> list[Path]:
+    reader = _open_reader(input_path)
+    page_count = len(reader.pages)
+
+    if page_count == 0:
+        raise PdfProcessingError("The uploaded PDF does not contain any pages.")
+
+    if not ranges:
+        raise PdfProcessingError("At least one page range is required.")
+
+    chunks: list[list[int]] = []
+    for page_range in ranges:
+        _validate_page_range(page_range.start, page_range.end, page_count)
+        chunks.append(list(range(page_range.start, page_range.end + 1)))
+
+    return _write_page_chunks(reader, chunks, output_dir)
+
+
+def _write_page_chunks(reader: PdfReader, chunks: list[list[int]], output_dir: Path) -> list[Path]:
     output_paths: list[Path] = []
+    page_count = len(reader.pages)
     width = max(3, len(str(page_count)))
 
     for index, chunk in enumerate(chunks, start=1):
@@ -110,6 +148,13 @@ def _open_reader(input_path: Path) -> PdfReader:
 
 
 def _validate_split_request(start_page: int, end_page: int, parts: int, page_count: int) -> None:
+    _validate_page_range(start_page, end_page, page_count)
+
+    if parts < 1:
+        raise PdfProcessingError("Number of parts must be 1 or greater.")
+
+
+def _validate_page_range(start_page: int, end_page: int, page_count: int) -> None:
     if start_page < 1:
         raise PdfProcessingError("Start page must be 1 or greater.")
 
@@ -118,24 +163,3 @@ def _validate_split_request(start_page: int, end_page: int, parts: int, page_cou
 
     if end_page > page_count:
         raise PdfProcessingError(f"End page cannot be greater than the PDF page count ({page_count}).")
-
-    if parts < 1:
-        raise PdfProcessingError("Number of parts must be 1 or greater.")
-
-    selected_page_count = end_page - start_page + 1
-    if parts > selected_page_count:
-        raise PdfProcessingError("Number of parts cannot be greater than the selected page count.")
-
-
-def _split_into_balanced_chunks(page_numbers: list[int], parts: int) -> list[list[int]]:
-    base_size = len(page_numbers) // parts
-    extra_pages = len(page_numbers) % parts
-    chunks: list[list[int]] = []
-    cursor = 0
-
-    for index in range(parts):
-        chunk_size = base_size + (1 if index < extra_pages else 0)
-        chunks.append(page_numbers[cursor : cursor + chunk_size])
-        cursor += chunk_size
-
-    return chunks
