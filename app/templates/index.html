@@ -44,13 +44,36 @@
             </label>
           </div>
           <input name="ranges" type="hidden" data-ranges-input />
-          <div class="range-list" data-range-list aria-label="Output file page ranges"></div>
+          <div class="range-list" data-range-list aria-label="Output file page ranges">
+            <div class="range-row">
+              <div class="range-label">Part 1</div>
+              <label>
+                Start page
+                <input type="number" min="1" step="1" value="1" required data-range-start />
+              </label>
+              <label>
+                End page
+                <input type="number" min="1" step="1" required data-range-end />
+              </label>
+            </div>
+            <div class="range-row">
+              <div class="range-label">Part 2</div>
+              <label>
+                Start page
+                <input type="number" min="1" step="1" required data-range-start />
+              </label>
+              <label>
+                End page
+                <input type="number" min="1" step="1" required data-range-end />
+              </label>
+            </div>
+          </div>
           <button type="submit">Split and download</button>
           <p class="status" role="status" aria-live="polite"></p>
         </form>
       </section>
     </main>
 
-    <script src="{{ url_for('static', path='/app.js') }}"></script>
+    <script src="{{ url_for('static', path='/app.js') }}?v=20260520-2"></script>
   </body>
 </html>
