@@ -11,12 +11,12 @@ from app.main import app
 client = TestClient(app)
 
 
-def make_pdf(page_count: int) -> bytes:
+def make_pdf(page_count: int, width: int = 72) -> bytes:
     buffer = BytesIO()
     writer = PdfWriter()
 
     for _ in range(page_count):
-        writer.add_blank_page(width=72, height=72)
+        writer.add_blank_page(width=width, height=72)
 
     writer.write(buffer)
     return buffer.getvalue()
@@ -34,6 +34,20 @@ def test_merge_endpoint_combines_uploaded_pdfs():
     assert response.status_code == 200
     assert response.headers["content-type"] == "application/pdf"
     assert len(PdfReader(BytesIO(response.content)).pages) == 3
+
+
+def test_merge_endpoint_preserves_uploaded_order():
+    response = client.post(
+        "/merge",
+        files=[
+            ("files", ("wide.pdf", make_pdf(1, width=144), "application/pdf")),
+            ("files", ("narrow.pdf", make_pdf(1, width=72), "application/pdf")),
+        ],
+    )
+
+    assert response.status_code == 200
+    reader = PdfReader(BytesIO(response.content))
+    assert [int(page.mediabox.width) for page in reader.pages] == [144, 72]
 
 
 def test_split_endpoint_returns_explicit_ranges_as_requested_parts():
