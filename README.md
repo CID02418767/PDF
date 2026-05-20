@@ -1,85 +1,75 @@
-# PDF Editor
+# Personal Tool Hub
 
-A small FastAPI website for working with PDF files. Version 1 supports:
+This project is a personal web app hub containing small browser-based tools for study, productivity, and everyday use. The PDF tools run fully inside the browser, so no backend server is required.
 
-- Merging \(N\) PDF files into one PDF.
-- Splitting one PDF into \(k\) user-defined page ranges inside a ZIP archive.
+## Current Features
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/CID02418767/PDF)
+- Personal tool dashboard for vibe-coding mini apps
+- Merge PDF files in the browser
+- Reorder and remove PDF files before merging
+- Split/extract PDF pages in the browser using ranges like \(1\), \(1-3\), \(1,3,5\), or \(1-3,6,8-10\)
+- Local browser-based processing
+- No file upload to any server
+- Placeholder sections for text, image, study, physics, and future tools
+
+## Privacy
+
+PDF files are processed locally in your browser and are not uploaded to any server.
 
 ## Tech Stack
 
-- Python 3.11+
-- FastAPI
-- pypdf
-- Jinja2 templates
-- Pytest
+- Vite
+- React
+- pdf-lib
+- HTML/CSS/JavaScript
 
-## Local Setup
+## Local Development
 
-Install Python 3.11 or newer, then run:
-
-```powershell
-cd D:\Vibecoding\pdf
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+```bash
+npm install
+npm run dev
 ```
 
-Open:
+## Build
 
-```text
-http://127.0.0.1:8000
+```bash
+npm run build
+npm run preview
 ```
 
-Do not open `app/templates/index.html` directly with `file://`. This app needs the FastAPI server because `/merge` and `/split` are backend endpoints.
+## GitHub Pages Deployment
 
-## Tests
+This project is configured for GitHub Pages under the repository name `PDF`:
 
-```powershell
-pytest
+```js
+export default defineConfig({
+  base: "/PDF/",
+  plugins: [react()],
+});
 ```
 
-The test suite checks that two PDFs merge into the expected total page count, that one PDF splits explicit page ranges into the requested number of parts, and that invalid uploads or split options are rejected.
+To deploy:
 
-## API
+1. Push the project to `CID02418767/PDF`.
+2. In GitHub, open **Settings -> Pages**.
+3. Choose GitHub Actions or deploy the `dist/` output with a Pages workflow.
 
-| Method | Path | Description |
-| --- | --- | --- |
-| `GET` | `/` | Web interface |
-| `GET` | `/healthz` | Health check for deployment platforms |
-| `POST` | `/merge` | Upload multiple PDFs with the field name `files`; returns `merged.pdf` |
-| `POST` | `/split` | Upload one PDF with `file`, `parts`, and `ranges`; returns `split-pages.zip` |
+## Archived Backend
 
-## Deploy to Render
+The old FastAPI backend has been moved to `archive-backend/`. It is kept only as reference and is no longer required.
 
-Create a new Render Web Service from the public GitHub repository.
+## Limitations
 
-- Build command: `pip install -r requirements.txt`
-- Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- Very large PDFs may be slow.
+- Browser memory may limit processing.
+- Advanced PDF editing, OCR, compression, and encryption may require more complex frontend logic or a local desktop app.
+- Some unusual PDF files may not behave perfectly depending on browser and library support.
 
-The included `render.yaml` can also be used as a blueprint.
+## Future Plans
 
-## Deploy to Railway
-
-Create a new Railway project from the public GitHub repository.
-
-- Build command: `pip install -r requirements.txt`
-- Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-
-## GitHub Upload
-
-After installing Git for Windows:
-
-```powershell
-cd D:\Vibecoding\pdf
-git init
-git add .
-git commit -m "Create FastAPI PDF editor"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/pdf.git
-git push -u origin main
-```
-
-Create a public GitHub repository named `pdf` before running the remote and push commands.
+- Text tools
+- Image tools
+- Study tools
+- Physics calculators
+- More PDF tools
+- Personal utilities for friends and small shared workflows
