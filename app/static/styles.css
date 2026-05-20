@@ -105,6 +105,57 @@ h1 {
   margin-top: 14px;
 }
 
+.merge-list {
+  display: grid;
+  gap: 10px;
+  min-height: 48px;
+  margin: 0 0 18px;
+  padding-left: 22px;
+}
+
+.merge-list:empty {
+  display: none;
+}
+
+.merge-item {
+  padding-left: 6px;
+}
+
+.merge-item::marker {
+  color: #246b5c;
+  font-weight: 800;
+}
+
+.merge-item {
+  align-items: center;
+}
+
+.merge-item,
+.merge-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.merge-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #354052;
+  font-weight: 700;
+}
+
+.icon-button {
+  width: 36px;
+  min-height: 36px;
+  border-radius: 6px;
+  padding: 0;
+  font-size: 1rem;
+}
+
+.icon-button:disabled {
+  opacity: 0.45;
+}
+
 .split-controls {
   display: grid;
   grid-template-columns: minmax(120px, 180px);
