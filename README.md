@@ -5,6 +5,8 @@ A small FastAPI website for working with PDF files. Version 1 supports:
 - Merging \(N\) PDF files into one PDF.
 - Splitting pages \(a\) through \(b\) from one PDF into \(k\) balanced PDF parts inside a ZIP archive.
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/CID02418767/PDF)
+
 ## Tech Stack
 
 - Python 3.11+
