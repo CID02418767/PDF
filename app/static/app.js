@@ -20,6 +20,75 @@ async function downloadResponse(response, fallbackName) {
   URL.revokeObjectURL(url);
 }
 
+function createMergeController(form) {
+  const fileInput = form.querySelector("[data-merge-files]");
+  const mergeList = form.querySelector("[data-merge-list]");
+  const files = [];
+
+  function render() {
+    if (!mergeList) {
+      return;
+    }
+
+    mergeList.replaceChildren();
+    files.forEach((file, index) => {
+      const item = document.createElement("li");
+      item.className = "merge-item";
+
+      const name = document.createElement("span");
+      name.className = "merge-name";
+      name.textContent = file.name;
+
+      const controls = document.createElement("div");
+      controls.className = "merge-controls";
+
+      const upButton = document.createElement("button");
+      upButton.type = "button";
+      upButton.className = "icon-button";
+      upButton.textContent = "↑";
+      upButton.title = "Move up";
+      upButton.disabled = index === 0;
+      upButton.addEventListener("click", () => {
+        [files[index - 1], files[index]] = [files[index], files[index - 1]];
+        render();
+      });
+
+      const downButton = document.createElement("button");
+      downButton.type = "button";
+      downButton.className = "icon-button";
+      downButton.textContent = "↓";
+      downButton.title = "Move down";
+      downButton.disabled = index === files.length - 1;
+      downButton.addEventListener("click", () => {
+        [files[index], files[index + 1]] = [files[index + 1], files[index]];
+        render();
+      });
+
+      controls.append(upButton, downButton);
+      item.append(name, controls);
+      mergeList.appendChild(item);
+    });
+  }
+
+  fileInput?.addEventListener("change", () => {
+    files.splice(0, files.length, ...Array.from(fileInput.files || []));
+    render();
+  });
+
+  render();
+
+  return {
+    createFormData() {
+      const data = new FormData();
+      files.forEach((file) => data.append("files", file, file.name));
+      return data;
+    },
+    hasEnoughFiles() {
+      return files.length >= 2;
+    },
+  };
+}
+
 function createRangeRows(form) {
   const partsInput = form.querySelector("[data-parts-input]");
   const rangeList = form.querySelector("[data-range-list]");
@@ -76,6 +145,7 @@ document.querySelectorAll("[data-download-form]").forEach((form) => {
   const status = form.querySelector(".status");
   const button = form.querySelector("button");
   const partsInput = form.querySelector("[data-parts-input]");
+  const mergeController = form.action.endsWith("/merge") ? createMergeController(form) : null;
 
   createRangeRows(form);
   partsInput?.addEventListener("input", () => createRangeRows(form));
@@ -93,9 +163,13 @@ document.querySelectorAll("[data-download-form]").forEach((form) => {
     serializeRangeRows(form);
 
     try {
+      if (mergeController && !mergeController.hasEnoughFiles()) {
+        throw new Error("Please choose at least two PDF files.");
+      }
+
       const response = await fetch(form.action, {
         method: "POST",
-        body: new FormData(form),
+        body: mergeController ? mergeController.createFormData() : new FormData(form),
       });
 
       if (!response.ok) {
