@@ -20,9 +20,65 @@ async function downloadResponse(response, fallbackName) {
   URL.revokeObjectURL(url);
 }
 
+function createRangeRows(form) {
+  const partsInput = form.querySelector("[data-parts-input]");
+  const rangeList = form.querySelector("[data-range-list]");
+
+  if (!partsInput || !rangeList) {
+    return;
+  }
+
+  const parts = Math.max(1, Number.parseInt(partsInput.value, 10) || 1);
+  const existingRows = Array.from(rangeList.querySelectorAll(".range-row")).map((row) => ({
+    start: row.querySelector("[data-range-start]")?.value || "",
+    end: row.querySelector("[data-range-end]")?.value || "",
+  }));
+
+  rangeList.replaceChildren();
+
+  for (let index = 0; index < parts; index += 1) {
+    const row = document.createElement("div");
+    row.className = "range-row";
+    row.innerHTML = `
+      <div class="range-label">Part ${index + 1}</div>
+      <label>
+        Start page
+        <input type="number" min="1" step="1" required data-range-start />
+      </label>
+      <label>
+        End page
+        <input type="number" min="1" step="1" required data-range-end />
+      </label>
+    `;
+
+    const startInput = row.querySelector("[data-range-start]");
+    const endInput = row.querySelector("[data-range-end]");
+    startInput.value = existingRows[index]?.start || (index === 0 ? "1" : "");
+    endInput.value = existingRows[index]?.end || "";
+    rangeList.appendChild(row);
+  }
+}
+
+function serializeRangeRows(form) {
+  const rows = Array.from(form.querySelectorAll("[data-range-list] .range-row"));
+  const ranges = rows.map((row) => ({
+    start: row.querySelector("[data-range-start]").value,
+    end: row.querySelector("[data-range-end]").value,
+  }));
+
+  const rangesInput = form.querySelector("[data-ranges-input]");
+  if (rangesInput) {
+    rangesInput.value = JSON.stringify(ranges);
+  }
+}
+
 document.querySelectorAll("[data-download-form]").forEach((form) => {
   const status = form.querySelector(".status");
   const button = form.querySelector("button");
+  const partsInput = form.querySelector("[data-parts-input]");
+
+  createRangeRows(form);
+  partsInput?.addEventListener("input", () => createRangeRows(form));
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -34,6 +90,7 @@ document.querySelectorAll("[data-download-form]").forEach((form) => {
 
     status.textContent = "Processing...";
     button.disabled = true;
+    serializeRangeRows(form);
 
     try {
       const response = await fetch(form.action, {
