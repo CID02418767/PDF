@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 import tempfile
 from pathlib import Path
@@ -10,7 +11,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.pdf_service import PdfProcessingError, merge_pdf_files, split_pdf_by_range, zip_files
+from app.pdf_service import PageRange, PdfProcessingError, merge_pdf_files, split_pdf_by_range, split_pdf_by_ranges, zip_files
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -71,6 +72,7 @@ async def split_pdf(
     start_page: int = Form(1),
     end_page: int | None = Form(None),
     parts: int = Form(1),
+    ranges: str | None = Form(None),
 ):
     workspace = Path(tempfile.mkdtemp(prefix="pdf-editor-split-"))
     background_tasks.add_task(shutil.rmtree, workspace, ignore_errors=True)
@@ -79,7 +81,11 @@ async def split_pdf(
         input_path = await _save_pdf_upload(file, workspace)
         pages_dir = workspace / "pages"
         pages_dir.mkdir()
-        page_paths = split_pdf_by_range(input_path, pages_dir, start_page, end_page, parts)
+        page_ranges = _parse_page_ranges(ranges, parts)
+        if page_ranges:
+            page_paths = split_pdf_by_ranges(input_path, pages_dir, page_ranges)
+        else:
+            page_paths = split_pdf_by_range(input_path, pages_dir, start_page, end_page, parts)
         output_path = workspace / "split-pages.zip"
         zip_files(page_paths, output_path)
     except PdfProcessingError as exc:
@@ -111,3 +117,34 @@ async def _save_pdf_upload(file: UploadFile, workspace: Path) -> Path:
     destination = workspace / f"{uuid4().hex}.pdf"
     destination.write_bytes(content)
     return destination
+
+
+def _parse_page_ranges(ranges: str | None, parts: int) -> list[PageRange]:
+    if not ranges:
+        return []
+
+    try:
+        raw_ranges = json.loads(ranges)
+    except json.JSONDecodeError as exc:
+        raise PdfProcessingError("Page ranges must be valid JSON.") from exc
+
+    if not isinstance(raw_ranges, list):
+        raise PdfProcessingError("Page ranges must be a list.")
+
+    if len(raw_ranges) != parts:
+        raise PdfProcessingError("Number of page ranges must match the number of parts.")
+
+    page_ranges: list[PageRange] = []
+    for raw_range in raw_ranges:
+        if not isinstance(raw_range, dict):
+            raise PdfProcessingError("Each page range must include a start and end page.")
+
+        try:
+            start = int(raw_range["start"])
+            end = int(raw_range["end"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise PdfProcessingError("Each page range must include numeric start and end pages.") from exc
+
+        page_ranges.append(PageRange(start=start, end=end))
+
+    return page_ranges
