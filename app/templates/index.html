@@ -18,12 +18,13 @@
         <form class="tool-card" data-download-form action="/merge" method="post" enctype="multipart/form-data">
           <div>
             <h2>Merge PDFs</h2>
-            <p>Select two or more PDF files. The output keeps the upload order.</p>
+            <p>Select two or more PDF files, then reorder them before merging.</p>
           </div>
           <label class="drop-zone">
             <span>Choose PDF files</span>
-            <input name="files" type="file" accept="application/pdf,.pdf" multiple required />
+            <input name="files" type="file" accept="application/pdf,.pdf" multiple required data-merge-files />
           </label>
+          <ol class="merge-list" data-merge-list aria-label="PDF merge order"></ol>
           <button type="submit">Merge and download</button>
           <p class="status" role="status" aria-live="polite"></p>
         </form>
@@ -74,6 +75,6 @@
       </section>
     </main>
 
-    <script src="{{ url_for('static', path='/app.js') }}?v=20260520-2"></script>
+    <script src="{{ url_for('static', path='/app.js') }}?v=20260520-3"></script>
   </body>
 </html>
