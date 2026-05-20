@@ -107,12 +107,13 @@ h1 {
 
 .split-controls {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(120px, 180px);
   gap: 12px;
   margin: 0 0 18px;
 }
 
-.split-controls label {
+.split-controls label,
+.range-row label {
   display: grid;
   gap: 8px;
   color: #354052;
@@ -120,7 +121,8 @@ h1 {
   font-weight: 700;
 }
 
-.split-controls input {
+.split-controls input,
+.range-row input {
   width: 100%;
   min-height: 42px;
   border: 1px solid #c8c2b5;
@@ -129,6 +131,29 @@ h1 {
   background: #ffffff;
   color: #1f2933;
   font: inherit;
+}
+
+.range-list {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.range-row {
+  display: grid;
+  grid-template-columns: 84px repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+  padding: 12px;
+  border: 1px solid #e4dfd2;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.range-label {
+  color: #246b5c;
+  font-weight: 800;
+  padding-bottom: 10px;
 }
 
 button {
@@ -177,5 +202,13 @@ button:disabled {
 
   .split-controls {
     grid-template-columns: 1fr;
+  }
+
+  .range-row {
+    grid-template-columns: 1fr;
+  }
+
+  .range-label {
+    padding-bottom: 0;
   }
 }
