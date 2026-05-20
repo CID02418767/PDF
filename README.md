@@ -3,7 +3,7 @@
 A small FastAPI website for working with PDF files. Version 1 supports:
 
 - Merging \(N\) PDF files into one PDF.
-- Splitting pages \(a\) through \(b\) from one PDF into \(k\) balanced PDF parts inside a ZIP archive.
+- Splitting one PDF into \(k\) user-defined page ranges inside a ZIP archive.
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/CID02418767/PDF)
 
@@ -41,7 +41,7 @@ Do not open `app/templates/index.html` directly with `file://`. This app needs t
 pytest
 ```
 
-The test suite checks that two PDFs merge into the expected total page count, that one PDF splits the selected page range into the requested number of parts, and that invalid uploads or split options are rejected.
+The test suite checks that two PDFs merge into the expected total page count, that one PDF splits explicit page ranges into the requested number of parts, and that invalid uploads or split options are rejected.
 
 ## API
 
@@ -50,7 +50,7 @@ The test suite checks that two PDFs merge into the expected total page count, th
 | `GET` | `/` | Web interface |
 | `GET` | `/healthz` | Health check for deployment platforms |
 | `POST` | `/merge` | Upload multiple PDFs with the field name `files`; returns `merged.pdf` |
-| `POST` | `/split` | Upload one PDF with `file`, `start_page`, `end_page`, and `parts`; returns `split-pages.zip` |
+| `POST` | `/split` | Upload one PDF with `file`, `parts`, and `ranges`; returns `split-pages.zip` |
 
 ## Deploy to Render
 
